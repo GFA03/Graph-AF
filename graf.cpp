@@ -17,7 +17,7 @@ bool operator < (const edge& a,const edge& b) {
     return a.weight < b.weight;
 }
 
-class Graf {
+class Graph {
 private:
     int numNodes;
     std::vector<std::vector<int>> adj;
@@ -33,9 +33,9 @@ private:
     void resetIsArticulation();
     void resetAll();
 public:
-    Graf(int numNodes = 0);
-    Graf(int numNodes, std::vector<std::vector<int>> adj);
-    Graf(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
+    Graph(int numNodes = 0);
+    Graph(int numNodes, std::vector<std::vector<int>> adj);
+    Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
 
     void addEdge(int node1, int node2, int weight = 1);
     void addNode();
@@ -47,7 +47,7 @@ public:
     bool isBipartite(int node, int parentNode);
 };
 // initialising graph using just the number of nodes
-Graf::Graf(int numNodes) {
+Graph::Graph(int numNodes) {
     this->numNodes = numNodes;
     adj.resize(numNodes);
     visited.resize(numNodes, false);
@@ -57,14 +57,14 @@ Graf::Graf(int numNodes) {
 }
 
 // initialising graph using the number of nodes and the adjacency list
-Graf::Graf(int numNodes, std::vector<std::vector<int>> adj) {
+Graph::Graph(int numNodes, std::vector<std::vector<int>> adj) {
     this->numNodes = numNodes;
     this->adj = adj;
-    for(int i = 0; i < adj.size(); ++i) {
-        for(int j = 0; j < adj[i].size(); ++j) {
-            edges.push_back({i, adj[i][j], 1});
-        }
-    }
+    // for(int i = 0; i < adj.size(); ++i) {
+    //     for(int j = 0; j < adj[i].size(); ++j) {
+    //         edges.push_back({i, adj[i][j], 1});
+    //     }
+    // }
     visited.resize(numNodes, false);
     lvl.resize(numNodes, -1);
     low.resize(numNodes, -1);
@@ -72,7 +72,7 @@ Graf::Graf(int numNodes, std::vector<std::vector<int>> adj) {
 }   
 
 // initialising graph using the number of nodes, the adjacency list and the vector of edges
-Graf::Graf(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges){
+Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges){
     this->numNodes = numNodes;
     this->adj = adj;
     this->edges = edges;
@@ -82,47 +82,47 @@ Graf::Graf(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> ed
     isArticulation.resize(numNodes, false);
 }
 
-void Graf::addNode(){
+void Graph::addNode(){
     numNodes++;
 }
 
 // adding edge to the graph
-void Graf::addEdge(int node1, int node2, int weight) {
+void Graph::addEdge(int node1, int node2, int weight) {
     adj[node1].push_back(node2);
     adj[node2].push_back(node1);
     edges.push_back({node1, node2, weight});
 }
 
 // reseting the visited vector
-void Graf::resetVisited() {
+void Graph::resetVisited() {
     for (int i = 0; i < numNodes; i++) {
         visited[i] = false;
     }
 }
 
 // reseting the lvl vector
-void Graf::resetLvl() {
+void Graph::resetLvl() {
     for (int i = 0; i < numNodes; i++) {
         lvl[i] = -1;
     }
 }
 
 // reseting the low vector
-void Graf::resetLow() {
+void Graph::resetLow() {
     for (int i = 0; i < numNodes; i++) {
         low[i] = -1;
     }
 }
 
 // reseting the isArticulation vector
-void Graf::resetIsArticulation() {
+void Graph::resetIsArticulation() {
     for (int i = 0; i < numNodes; i++) {
         isArticulation[i] = false;
     }
 }
 
 // reseting all vectors
-void Graf::resetAll() {
+void Graph::resetAll() {
     resetVisited();
     resetLvl();
     resetLow();
@@ -130,7 +130,7 @@ void Graf::resetAll() {
 }
 
 // Depth first search returning a vector with the order of the nodes visited
-std::vector<int> Graf::dfs(int startNode) {
+std::vector<int> Graph::dfs(int startNode) {
     resetAll();
     std::stack<int> s;
     std::vector<int> returningDFS;
@@ -152,7 +152,7 @@ std::vector<int> Graf::dfs(int startNode) {
 }
 
 // Breadth first search returning a vector with the order of the nodes visited
-std::vector<int> Graf::bfs(int startNode) {
+std::vector<int> Graph::bfs(int startNode) {
     resetAll();
     std::vector<int> returningBFS;
     std::queue<int> q;
@@ -174,9 +174,15 @@ std::vector<int> Graf::bfs(int startNode) {
 
 // TO DO: Dijkstra algorithm should return VECTOR not INT and you can get the SIZE by VECTOR.SIZE() instead
 // Dijkstra's algorithm returning the shortest distance between two nodes using a vector of edges
-int Graf::dijkstra(int startNode, int endNode) {
+int Graph::dijkstra(int startNode, int endNode) {
     std::vector<int> dist(numNodes, 1000000000);
     std::priority_queue<std::pair<int, int>> pq;
+    if(edges.empty())
+        for(int i = 0; i < adj.size(); ++i) {
+            for(int j = 0; j < adj[i].size(); ++j) {
+                edges.push_back({i, adj[i][j], 1});
+            }
+    }
     dist[startNode] = 0;
     pq.push(std::make_pair(0, startNode));
     while(!pq.empty()) {
@@ -196,7 +202,7 @@ int Graf::dijkstra(int startNode, int endNode) {
     return dist[endNode];
 }
 
-std::vector<int> Graf::bellmanFord(int startNode, int endNode) {
+std::vector<int> Graph::bellmanFord(int startNode, int endNode) {
     std::vector<int> dist(numNodes, 1000000000);
     dist[startNode] = 0;
     for (int i = 0; i < numNodes - 1; i++) {
@@ -213,7 +219,7 @@ std::vector<int> Graf::bellmanFord(int startNode, int endNode) {
 }
 
 // check if the graph is bipartite, before using it you should call ResetAll() method because the visited vector might be changed
-bool Graf::isBipartite(int node, int parentNode) {
+bool Graph::isBipartite(int node, int parentNode) {
     std::queue<int> q;
     q.push(node);
     std::vector<int> colors(numNodes, -1);
@@ -241,10 +247,10 @@ bool Graf::isBipartite(int node, int parentNode) {
 
 // articulation points and bridges
 
-// deseneaza pe o foaie grafuri ca sa intelegi articulation points and bridges
+// deseneaza pe o foaie Graphuri ca sa intelegi articulation points and bridges
     
 int main () {
-    std::ifstream fin("graf.in");
+    std::ifstream fin("Graph.in");
     int n, m;
     fin >> n >> m;
     std::vector<std::vector<int>> adj(n+1);
@@ -255,14 +261,14 @@ int main () {
         adj[x].push_back(y);
         adj[y].push_back(x);
     }
-    Graf g(7, adj);
+    Graph g(7, adj);
     std::cout << g.dijkstra(1, 4);
     return 0;
 }
 
 
 
-// int Graf::dijkstra(int startNode, int endNode) {
+// int Graph::dijkstra(int startNode, int endNode) {
 //     std::vector<int> dist(numNodes, 1000000000);
 //     std::priority_queue<std::pair<int, int>> pq;
 //     dist[startNode] = 0;
@@ -283,7 +289,7 @@ int main () {
 // }
 
 // Dijkstra's algorithm returning the shortest distance between two nodes
-// int Graf::dijkstra(int startNode, int endNode) {
+// int Graph::dijkstra(int startNode, int endNode) {
 //     std::vector<edge> edges;
 //     for (int i = 0; i < numNodes; i++) {
 //         for (int j = 0; j < adj[i].size(); j++) {
