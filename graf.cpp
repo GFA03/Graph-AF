@@ -37,14 +37,16 @@ public:
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
 
-    void addEdge(int node1, int node2, int weight = 1);
+    void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
     std::vector<int> bfs(int startNode);
     int dijkstra(int startNode, int endNode, std::vector<edge> edges);
     int dijkstra(int startNode, int endNode);
-    std::vector<int> bellmanFord(int startNode, int endNode);
+    std::vector<int> bellmanFord(int startNode);
     bool isBipartite(int node, int parentNode);
+    std::vector<int> topologicalSort();
+    std::vector<int> minimumSpanningTree();
 };
 // initialising graph using just the number of nodes
 Graph::Graph(int numNodes) {
@@ -87,9 +89,14 @@ void Graph::addNode(){
 }
 
 // adding edge to the graph
-void Graph::addEdge(int node1, int node2, int weight) {
+void Graph::addEdge(int node1, int node2, int weight, bool isDirected) {
+    if(!isDirected) {
+        adj[node1].push_back(node2);
+        adj[node2].push_back(node1);
+        edges.push_back({node1, node2, weight});
+        return;
+    }
     adj[node1].push_back(node2);
-    adj[node2].push_back(node1);
     edges.push_back({node1, node2, weight});
 }
 
@@ -202,7 +209,7 @@ int Graph::dijkstra(int startNode, int endNode) {
     return dist[endNode];
 }
 
-std::vector<int> Graph::bellmanFord(int startNode, int endNode) {
+std::vector<int> Graph::bellmanFord(int startNode) {
     std::vector<int> dist(numNodes, 1000000000);
     dist[startNode] = 0;
     for (int i = 0; i < numNodes - 1; i++) {
@@ -240,10 +247,63 @@ bool Graph::isBipartite(int node, int parentNode) {
     return true;
 }
 
-// topological sorting
-
+// topological sorting of a graph using Kahn's algorithm returning a vector with the order of the nodes
+std::vector<int> Graph::topologicalSort() {
+    std::vector<int> returningTopologicalSort;
+    std::vector<int> inDegree(numNodes, 0);
+    for(int i = 0; i < numNodes; ++i) {
+        for(int j = 0; j < adj[i].size(); ++j) {
+            inDegree[adj[i][j]]++;
+        }
+    }
+    std::queue<int> q;
+    for(int i = 0; i < numNodes; ++i) {
+        if(inDegree[i] == 0) {
+            q.push(i);
+        }
+    }
+    while(!q.empty()) {
+        int currentNode = q.front();
+        q.pop();
+        returningTopologicalSort.push_back(currentNode);
+        for(int i = 0; i < adj[currentNode].size(); ++i) {
+            int nextNode = adj[currentNode][i];
+            inDegree[nextNode]--;
+            if(inDegree[nextNode] == 0) {
+                q.push(nextNode);
+            }
+        }
+    }
+    return returningTopologicalSort;
+}
 
 // minimum spanning tree
+std::vector<int> Graph::minimumSpanningTree() {
+    std::vector<int> returningMST;
+    std::vector<edge> sortedEdges = edges;
+    // check if sortedEdges does a good job in sorting the edges
+    std::sort(sortedEdges.begin(), sortedEdges.end());
+    std::vector<int> parent(numNodes);
+    for(int i = 0; i < numNodes; ++i) {
+        parent[i] = i;
+    }
+    for(int i = 0; i < sortedEdges.size(); ++i) {
+        int node1 = sortedEdges[i].node1;
+        int node2 = sortedEdges[i].node2;
+        int weight = sortedEdges[i].weight;
+        if(parent[node1] != parent[node2]) {
+            returningMST.push_back(weight);
+            int oldParent = parent[node1];
+            int newParent = parent[node2];
+            for(int j = 0; j < numNodes; ++j) {
+                if(parent[j] == oldParent) {
+                    parent[j] = newParent;
+                }
+            }
+        }
+    }
+    return returningMST;
+}
 
 // articulation points and bridges
 
