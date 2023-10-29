@@ -201,7 +201,7 @@ void Graph::dfsCritical(int node, int parentNode) {
     int children = 0;
     for(auto neighbour: adj[node]) {
         if(!visited[neighbour]) {
-            dfsCriticalConditions(neighbour, node);
+            dfsCritical(neighbour, node);
             children++;
             low[node] = std::min(low[node], low[neighbour]);
             if(low[neighbour] >= lvl[node] && node != 0) {
