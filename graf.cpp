@@ -27,7 +27,7 @@ private:
     std::vector<int> lvl;
     std::vector<int> low;
     std::vector<bool> isArticulation;
-    std::vector<edge> bridges;
+    std::vector<std::vector<int>> bridges;
 
     // reseting class vectors
     void resetVisited();
@@ -39,7 +39,7 @@ private:
     //getters
     const std::vector<bool> getVisited() const { return visited; }
     const std::vector<bool> getArticulation() const { return isArticulation; }
-    const std::vector<edge> getBridge() const { return bridges; }
+    const std::vector<std::vector<int>> getBridge() const { return bridges; }
     
     // functions for union find algorithm
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
@@ -51,6 +51,7 @@ public:
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
 
+    void constructConnections(std::vector<std::vector<int>> connections);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
@@ -96,6 +97,14 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> 
     lvl.resize(numNodes, -1);
     low.resize(numNodes, -1);
     isArticulation.resize(numNodes, false);
+}
+
+void Graph::constructConnections(std::vector<std::vector<int>> connections) {
+    for(auto edge: connections) {
+        adj[edge[0]].push_back(edge[1]);
+        adj[edge[1]].push_back(edge[0]);
+    }
+    
 }
 
 void Graph::addNode(){
@@ -192,7 +201,7 @@ void Graph::dfsCriticalConditions(int node, int parentNode) {
                 isArticulation[node] = true;
             }
             if(low[neighbour] > lvl[node]) {
-                bridges.push_back({node, neighbour, 1});
+                bridges.push_back({node, neighbour});
             }
         } else if(neighbour != parentNode) {
             low[node] = std::min(low[node], lvl[neighbour]);
@@ -393,7 +402,7 @@ int main () {
         adj[y].push_back(x);
     }
     Graph g(n, adj);
-    
+    g.dfsCriticalConditions(0);
     return 0;
 }
 
