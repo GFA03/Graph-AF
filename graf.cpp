@@ -54,11 +54,11 @@ public:
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
-    void dfsCriticalConditions(int node, int parentNode = 0);
+    void dfsCriticalConditions(int node, int parentNode = -1);
     std::vector<int> bfs(int startNode);
     int dijkstra(int startNode, int endNode);
     std::vector<int> bellmanFord(int startNode);
-    bool isBipartite(int node, int parentNode);
+    bool isBipartite();
     std::vector<int> topologicalSort();
     std::vector<edge> minimumSpanningTree();
 };
@@ -176,7 +176,10 @@ std::vector<int> Graph::dfs(int startNode) {
 // and bridges will be in the returningBridges vector
 void Graph::dfsCriticalConditions(int node, int parentNode) {
     resetAll(); // reseting the visited vector
-    lvl[node] = lvl[parentNode]  + 1;
+    if(parentNode == -1)
+        lvl[node] = 1;
+    else
+        lvl[node] = lvl[parentNode]  + 1;
     low[node] = lvl[node];
     visited[node] = 1;
     int children = 0;
@@ -195,7 +198,7 @@ void Graph::dfsCriticalConditions(int node, int parentNode) {
             low[node] = std::min(low[node], lvl[neighbour]);
         }
     }
-    if(parentNode == 0 && children > 1)
+    if(parentNode == -1 && children > 1)
         isArticulation[node] = true;
 }
 
@@ -266,22 +269,28 @@ std::vector<int> Graph::bellmanFord(int startNode) {
     return dist; // returning the vector of distances
 }
 
-// check if the graph is bipartite, before using it you should call ResetAll() method because the visited vector might be changed
-bool Graph::isBipartite(int node, int parentNode) {
+// check if the graph is bipartite
+bool Graph::isBipartite() {
+    int node = 0;
     std::queue<int> q; // queue of nodes
     q.push(node); // adding the first node to the queue
     std::vector<int> colors(numNodes, -1); // vector of colors for the nodes (-1 = not colored, 0 = color 1, 1 = color 2)
-    colors[node] = 0; // coloring the first node with color 1
-    while(!q.empty()) { // while the queue is not empty means that we still have nodes to color
-        int currentNode = q.front();
-        q.pop();
-        for(int i = 0; i < adj[currentNode].size(); ++i) {
-            int nextNode = adj[currentNode][i]; // the next node is the node that we are going to color
-            if(colors[nextNode] == -1) { // if the next node is not colored then:
-                colors[nextNode] = 1 - colors[currentNode]; // color the next node with the opposite color of the current node
-                q.push(nextNode); // add the next node to the queue
-            } else if(colors[nextNode] == colors[currentNode]) { // if the next node is colored with the same color as the current node then:
-                return false; // the graph is not bipartite
+    for(int i = 0; i < numNodes; i++) {
+        if(colors[i] == -1) { // if the node is not colored then:
+            colors[i] = 0; // color the node with color 1
+            q.push(i); // add the node to the queue
+        }
+        while(!q.empty()) { // while the queue is not empty means that we still have nodes to color
+            int currentNode = q.front();
+            q.pop();
+            for(int i = 0; i < adj[currentNode].size(); ++i) {
+                int nextNode = adj[currentNode][i]; // the next node is the node that we are going to color
+                if(colors[nextNode] == -1) { // if the next node is not colored then:
+                    colors[nextNode] = 1 - colors[currentNode]; // color the next node with the opposite color of the current node
+                    q.push(nextNode); // add the next node to the queue
+                } else if(colors[nextNode] == colors[currentNode]) { // if the next node is colored with the same color as the current node then:
+                    return false; // the graph is not bipartite
+                }
             }
         }
     }
@@ -370,39 +379,52 @@ std::vector<edge> Graph::minimumSpanningTree() {
     return returningMST;
 }
 
-// articulation points and bridges
-
-
-// deseneaza pe o foaie Graphuri ca sa intelegi articulation points and bridges
-    
 int main () {
     std::ifstream fin("graf.in");
     // std::ifstream fin("graf2.in");
     int n, m;
     fin >> n >> m;
-    // std::vector<std::vector<int>> adj(n+1);
-    // for(int i = 0; i < m; i++)
-    // {
-    //     int x, y;
-    //     fin >> x >> y;
-    //     adj[x].push_back(y);
-    //     adj[y].push_back(x);
-    // }
-    std::vector<std::vector<int>> adj(n);
-    std::vector<edge> edges(m);
+    std::vector<std::vector<int>> adj(n+1);
     for(int i = 0; i < m; i++)
     {
-        int x, y, w;
-        fin >> x >> y >> w;
+        int x, y;
+        fin >> x >> y;
         adj[x].push_back(y);
         adj[y].push_back(x);
-        edges[i] = {x, y, w};
     }
-    Graph g(n, adj, edges);
-    // std::cout << g.dijkstra(1, 4);
-    std::vector<edge> v = g.minimumSpanningTree();
-    for(int i = 0; i < v.size(); ++i) {
-        std::cout << v[i].node1 << " " << v[i].node2 << " " << v[i].weight << "\n";
-    }
+    Graph g(n, adj);
+    
     return 0;
 }
+
+// int main () {
+//     std::ifstream fin("graf.in");
+//     // std::ifstream fin("graf2.in");
+//     int n, m;
+//     fin >> n >> m;
+//     // std::vector<std::vector<int>> adj(n+1);
+//     // for(int i = 0; i < m; i++)
+//     // {
+//     //     int x, y;
+//     //     fin >> x >> y;
+//     //     adj[x].push_back(y);
+//     //     adj[y].push_back(x);
+//     // }
+//     std::vector<std::vector<int>> adj(n);
+//     std::vector<edge> edges(m);
+//     for(int i = 0; i < m; i++)
+//     {
+//         int x, y, w;
+//         fin >> x >> y >> w;
+//         adj[x].push_back(y);
+//         adj[y].push_back(x);
+//         edges[i] = {x, y, w};
+//     }
+//     Graph g(n, adj, edges);
+//     // std::cout << g.dijkstra(1, 4);
+//     std::vector<edge> v = g.minimumSpanningTree();
+//     for(int i = 0; i < v.size(); ++i) {
+//         std::cout << v[i].node1 << " " << v[i].node2 << " " << v[i].weight << "\n";
+//     }
+//     return 0;
+// }
