@@ -35,21 +35,23 @@ private:
     void resetLow();
     void resetIsArticulation();
     void resetAll();
-
-    //getters
-    const std::vector<bool> getVisited() const { return visited; }
-    const std::vector<bool> getArticulation() const { return isArticulation; }
-    const std::vector<std::vector<int>> getBridge() const { return bridges; }
     
     // functions for union find algorithm
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
     int find(int node, std::vector<int>& parent);
     void unionSet(int node1, int node2, std::vector<int>& parent, std::vector<int>& rank);
+    void dfsCritical(int node, int parentNode = -1); // Made to dfsCritical because in dfsCriticalConditions I reset the visited vector
+                                                    // and then calling the dfsCritical
 
 public:
     Graph(int numNodes = 0);
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
+
+    //getters
+    const std::vector<bool> getVisited() const { return visited; }
+    const std::vector<bool> getArticulation() const { return isArticulation; }
+    const std::vector<std::vector<int>> getBridges() const { return bridges; }
 
     void constructConnections(std::vector<std::vector<int>> connections);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
@@ -183,8 +185,13 @@ std::vector<int> Graph::dfs(int startNode) {
 
 // DFS implementation for finding articulation points and bridges -> Articulation points will be in isArticulation from class
 // and bridges will be in the returningBridges vector
+// BEFORE CALLING dfsCriticalConditions YOU SHOULD resetAll() !!!!!!!
 void Graph::dfsCriticalConditions(int node, int parentNode) {
-    resetAll(); // reseting the visited vector
+    resetAll();
+    dfsCritical(node, parentNode);
+}
+
+void Graph::dfsCritical(int node, int parentNode) {
     if(parentNode == -1)
         lvl[node] = 1;
     else
