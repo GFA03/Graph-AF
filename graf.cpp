@@ -27,6 +27,7 @@ private:
     std::vector<int> lvl;
     std::vector<int> low;
     std::vector<bool> isArticulation;
+    std::vector<edge> bridges;
 
     // reseting class vectors
     void resetVisited();
@@ -34,6 +35,11 @@ private:
     void resetLow();
     void resetIsArticulation();
     void resetAll();
+
+    //getters
+    const std::vector<bool> getVisited() const { return visited; }
+    const std::vector<bool> getArticulation() const { return isArticulation; }
+    const std::vector<edge> getBridge() const { return bridges; }
     
     // functions for union find algorithm
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
@@ -48,9 +54,8 @@ public:
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
-    int dfsCriticalConditions(int node, int parentNode);
+    void dfsCriticalConditions(int node, int parentNode = 0);
     std::vector<int> bfs(int startNode);
-    int dijkstra(int startNode, int endNode, std::vector<edge> edges);
     int dijkstra(int startNode, int endNode);
     std::vector<int> bellmanFord(int startNode);
     bool isBipartite(int node, int parentNode);
@@ -165,6 +170,33 @@ std::vector<int> Graph::dfs(int startNode) {
         }
     }
     return returningDFS;
+}
+
+// DFS implementation for finding articulation points and bridges -> Articulation points will be in isArticulation from class
+// and bridges will be in the returningBridges vector
+void Graph::dfsCriticalConditions(int node, int parentNode) {
+    resetAll(); // reseting the visited vector
+    lvl[node] = lvl[parentNode]  + 1;
+    low[node] = lvl[node];
+    visited[node] = 1;
+    int children = 0;
+    for(auto neighbour: adj[node]) {
+        if(!visited[neighbour]) {
+            dfsCriticalConditions(neighbour, node);
+            children++;
+            low[node] = std::min(low[node], low[neighbour]);
+            if(low[neighbour] >= lvl[node] && node != 0) {
+                isArticulation[node] = true;
+            }
+            if(low[neighbour] > lvl[node]) {
+                bridges.push_back({node, neighbour, 1});
+            }
+        } else if(neighbour != parentNode) {
+            low[node] = std::min(low[node], lvl[neighbour]);
+        }
+    }
+    if(parentNode == 0 && children > 1)
+        isArticulation[node] = true;
 }
 
 // Breadth first search returning a vector with the order of the nodes visited
@@ -344,7 +376,8 @@ std::vector<edge> Graph::minimumSpanningTree() {
 // deseneaza pe o foaie Graphuri ca sa intelegi articulation points and bridges
     
 int main () {
-    std::ifstream fin("graf2.in");
+    std::ifstream fin("graf.in");
+    // std::ifstream fin("graf2.in");
     int n, m;
     fin >> n >> m;
     // std::vector<std::vector<int>> adj(n+1);
@@ -373,36 +406,3 @@ int main () {
     }
     return 0;
 }
-
-
-
-// int Graph::dijkstra(int startNode, int endNode) {
-//     std::vector<int> dist(numNodes, 1000000000);
-//     std::priority_queue<std::pair<int, int>> pq;
-//     dist[startNode] = 0;
-//     pq.push(std::make_pair(0, startNode));
-//     while(!pq.empty()) {
-//         int currentNode = pq.top().second;
-//         pq.pop();
-//         for (int i = 0; i < adj[currentNode].size(); i++) {
-//             int nextNode = adj[currentNode][i];
-//             int weight = 1;
-//             if (dist[nextNode] > dist[currentNode] + weight) {
-//                 dist[nextNode] = dist[currentNode] + weight;
-//                 pq.push(std::make_pair(-dist[nextNode], nextNode));
-//             }
-//         }
-//     }
-//     return dist[endNode];
-// }
-
-// Dijkstra's algorithm returning the shortest distance between two nodes
-// int Graph::dijkstra(int startNode, int endNode) {
-//     std::vector<edge> edges;
-//     for (int i = 0; i < numNodes; i++) {
-//         for (int j = 0; j < adj[i].size(); j++) {
-//             edges.push_back({i, adj[i][j], 1});
-//         }
-//     }
-//     return dijkstra(startNode, endNode, edges);
-// }
