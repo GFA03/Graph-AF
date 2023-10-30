@@ -24,15 +24,11 @@ private:
     std::vector<std::vector<int>> adj;
     std::vector<edge> edges;
     std::vector<bool> visited;
-    std::vector<int> lvl;
-    std::vector<int> low;
     std::vector<bool> isArticulation;
     std::vector<std::vector<int>> bridges;
 
     // reseting class vectors
     void resetVisited();
-    void resetLvl();
-    void resetLow();
     void resetIsArticulation();
     void resetAll();
     
@@ -40,8 +36,8 @@ private:
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
     int find(int node, std::vector<int>& parent);
     void unionSet(int node1, int node2, std::vector<int>& parent, std::vector<int>& rank);
-    void dfsCritical(int node, int parentNode = -1); // Made to dfsCritical because in dfsCriticalConditions I reset the visited vector
-                                                    // and then calling the dfsCritical
+// Made two dfsCritical because in dfsCriticalConditions I reset the visited vector and then calling the dfsCritical
+    void dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low); 
 
 public:
     Graph(int numNodes = 0);
@@ -53,7 +49,7 @@ public:
     const std::vector<bool> getArticulation() const { return isArticulation; }
     const std::vector<std::vector<int>> getBridges() const { return bridges; }
 
-    void constructConnections(std::vector<std::vector<int>> connections);
+    void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
@@ -70,8 +66,6 @@ Graph::Graph(int numNodes) {
     this->numNodes = numNodes;
     adj.resize(numNodes);
     visited.resize(numNodes, false);
-    lvl.resize(numNodes, -1);
-    low.resize(numNodes, -1);
     isArticulation.resize(numNodes, false);
 }
 
@@ -85,8 +79,6 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj) {
     //     }
     // }
     visited.resize(numNodes, false);
-    lvl.resize(numNodes, -1);
-    low.resize(numNodes, -1);
     isArticulation.resize(numNodes, false);
 }   
 
@@ -96,17 +88,22 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> 
     this->adj = adj;
     this->edges = edges;
     visited.resize(numNodes, false);
-    lvl.resize(numNodes, -1);
-    low.resize(numNodes, -1);
     isArticulation.resize(numNodes, false);
 }
 
-void Graph::constructConnections(std::vector<std::vector<int>> connections) {
+void Graph::constructConnections(std::vector<std::vector<int>> connections, bool isDirected) {
+    if(!isDirected) {
+        for(auto edge: connections) {
+            adj[edge[0]].push_back(edge[1]);
+            adj[edge[1]].push_back(edge[0]);
+            edges.push_back({edge[0], edge[1], 1});
+        }
+        return;
+    }
     for(auto edge: connections) {
         adj[edge[0]].push_back(edge[1]);
-        adj[edge[1]].push_back(edge[0]);
+        edges.push_back({edge[0], edge[1], 1});
     }
-    
 }
 
 void Graph::addNode(){
@@ -132,20 +129,6 @@ void Graph::resetVisited() {
     }
 }
 
-// reseting the lvl vector
-void Graph::resetLvl() {
-    for (int i = 0; i < numNodes; i++) {
-        lvl[i] = -1;
-    }
-}
-
-// reseting the low vector
-void Graph::resetLow() {
-    for (int i = 0; i < numNodes; i++) {
-        low[i] = -1;
-    }
-}
-
 // reseting the isArticulation vector
 void Graph::resetIsArticulation() {
     for (int i = 0; i < numNodes; i++) {
@@ -156,8 +139,6 @@ void Graph::resetIsArticulation() {
 // reseting all vectors
 void Graph::resetAll() {
     resetVisited();
-    resetLvl();
-    resetLow();
     resetIsArticulation();
 }
 
@@ -185,13 +166,14 @@ std::vector<int> Graph::dfs(int startNode) {
 
 // DFS implementation for finding articulation points and bridges -> Articulation points will be in isArticulation from class
 // and bridges will be in the returningBridges vector
-// BEFORE CALLING dfsCriticalConditions YOU SHOULD resetAll() !!!!!!!
 void Graph::dfsCriticalConditions(int node, int parentNode) {
-    resetAll();
-    dfsCritical(node, parentNode);
+    resetVisited();
+    std::vector<int> lvl(numNodes, -1);
+    std::vector<int> low(numNodes, -1);
+    dfsCritical(node, parentNode, lvl, low);
 }
 
-void Graph::dfsCritical(int node, int parentNode) {
+void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low) {
     if(parentNode == -1)
         lvl[node] = 1;
     else
@@ -201,7 +183,7 @@ void Graph::dfsCritical(int node, int parentNode) {
     int children = 0;
     for(auto neighbour: adj[node]) {
         if(!visited[neighbour]) {
-            dfsCritical(neighbour, node);
+            dfsCritical(neighbour, node, lvl, low);
             children++;
             low[node] = std::min(low[node], low[neighbour]);
             if(low[neighbour] >= lvl[node] && node != 0) {
