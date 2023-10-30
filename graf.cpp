@@ -23,31 +23,18 @@ private:
     int numNodes;
     std::vector<std::vector<int>> adj;
     std::vector<edge> edges;
-    std::vector<bool> visited;
-    std::vector<bool> isArticulation;
-    std::vector<std::vector<int>> bridges;
-
-    // reseting class vectors
-    void resetVisited();
-    void resetIsArticulation();
-    void resetAll();
     
     // functions for union find algorithm
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
     int find(int node, std::vector<int>& parent);
     void unionSet(int node1, int node2, std::vector<int>& parent, std::vector<int>& rank);
 // Made two dfsCritical because in dfsCriticalConditions I reset the visited vector and then calling the dfsCritical
-    void dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low); 
+    void dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low, std::vector<bool>& visited, std::vector<bool>& isArticulation, std::vector<std::vector<int>>& bridges); 
 
 public:
     Graph(int numNodes = 0);
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
-
-    //getters
-    const std::vector<bool> getVisited() const { return visited; }
-    const std::vector<bool> getArticulation() const { return isArticulation; }
-    const std::vector<std::vector<int>> getBridges() const { return bridges; }
 
     void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
@@ -65,8 +52,6 @@ public:
 Graph::Graph(int numNodes) {
     this->numNodes = numNodes;
     adj.resize(numNodes);
-    visited.resize(numNodes, false);
-    isArticulation.resize(numNodes, false);
 }
 
 // initialising graph using the number of nodes and the adjacency list
@@ -78,8 +63,6 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj) {
     //         edges.push_back({i, adj[i][j], 1});
     //     }
     // }
-    visited.resize(numNodes, false);
-    isArticulation.resize(numNodes, false);
 }   
 
 // initialising graph using the number of nodes, the adjacency list and the vector of edges
@@ -87,8 +70,6 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> 
     this->numNodes = numNodes;
     this->adj = adj;
     this->edges = edges;
-    visited.resize(numNodes, false);
-    isArticulation.resize(numNodes, false);
 }
 
 void Graph::constructConnections(std::vector<std::vector<int>> connections, bool isDirected) {
@@ -122,29 +103,9 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected) {
     edges.push_back({node1, node2, weight});
 }
 
-// reseting the visited vector
-void Graph::resetVisited() {
-    for (int i = 0; i < numNodes; i++) {
-        visited[i] = false;
-    }
-}
-
-// reseting the isArticulation vector
-void Graph::resetIsArticulation() {
-    for (int i = 0; i < numNodes; i++) {
-        isArticulation[i] = false;
-    }
-}
-
-// reseting all vectors
-void Graph::resetAll() {
-    resetVisited();
-    resetIsArticulation();
-}
-
 // Depth first search returning a vector with the order of the nodes visited
 std::vector<int> Graph::dfs(int startNode) {
-    resetAll(); // reseting the visited vector
+    std::vector<bool> visited(numNodes, false);
     std::stack<int> s; // stack of nodes
     std::vector<int> returningDFS; // the vector of the DFS that will be returned
     visited[startNode] = true; // marking the start node as visited
@@ -167,13 +128,15 @@ std::vector<int> Graph::dfs(int startNode) {
 // DFS implementation for finding articulation points and bridges -> Articulation points will be in isArticulation from class
 // and bridges will be in the returningBridges vector
 void Graph::dfsCriticalConditions(int node, int parentNode) {
-    resetVisited();
+    std::vector<bool> visited(numNodes, false);
     std::vector<int> lvl(numNodes, -1);
     std::vector<int> low(numNodes, -1);
-    dfsCritical(node, parentNode, lvl, low);
+    std::vector<bool> isArticulation(numNodes, false);
+    std::vector<std::vector<int>> bridges(numNodes);
+    dfsCritical(node, parentNode, lvl, low, visited, isArticulation, bridges);
 }
 
-void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low) {
+void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low, std::vector<bool>& visited, std::vector<bool>& isArticulation, std::vector<std::vector<int>>& bridges) {
     if(parentNode == -1)
         lvl[node] = 1;
     else
@@ -183,7 +146,7 @@ void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::ve
     int children = 0;
     for(auto neighbour: adj[node]) {
         if(!visited[neighbour]) {
-            dfsCritical(neighbour, node, lvl, low);
+            dfsCritical(neighbour, node, lvl, low, visited, isArticulation, bridges);
             children++;
             low[node] = std::min(low[node], low[neighbour]);
             if(low[neighbour] >= lvl[node] && node != 0) {
@@ -202,7 +165,7 @@ void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::ve
 
 // Breadth first search returning a vector with the order of the nodes visited
 std::vector<int> Graph::bfs(int startNode) {
-    resetAll(); // reseting the visited vector
+    std::vector<bool> visited(numNodes, false);
     std::vector<int> returningBFS; // the vector of the BFS that will be returned
     std::queue<int> q; // queue of nodes
     visited[startNode] = true; // marking the start node as visited
