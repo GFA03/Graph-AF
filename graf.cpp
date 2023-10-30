@@ -23,6 +23,7 @@ private:
     int numNodes;
     std::vector<std::vector<int>> adj;
     std::vector<edge> edges;
+    std::vector<int> nodeValues;
     
     // functions for union find algorithm
     void makeSet(int node, std::vector<int>& parent, std::vector<int>& rank);
@@ -33,6 +34,7 @@ private:
 
 public:
     Graph(int numNodes = 0);
+    Graph(std::vector<std::vector<int>> matrix); // initialising graph for shortest bridge problem, each element in the matrix is a node
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
 
@@ -53,6 +55,25 @@ public:
 Graph::Graph(int numNodes) {
     this->numNodes = numNodes;
     adj.resize(numNodes);
+}
+
+Graph::Graph(std::vector<std::vector<int>> matrix)
+{
+    for(int i = 0 ; i < matrix.size(); i++) {
+        for(int j = 0; j < matrix[i].size(); j++) {
+            if(matrix[i][j] == 1) {
+                nodeValues[i * matrix.size() + j] = 1;
+            }
+            if(i-1 >= 0)
+                adj[i * matrix.size() + j].push_back((i-1) * matrix.size() + j);
+            if(i+1 < matrix.size())
+                adj[i * matrix.size() + j].push_back((i+1) * matrix.size() + j);
+            if(j-1 >= 0)
+                adj[i * matrix.size() + j].push_back(i * matrix.size() + j - 1);
+            if(j+1 < matrix.size())
+                adj[i * matrix.size() + j].push_back(i * matrix.size() + j + 1);
+        }
+    }
 }
 
 // initialising graph using the number of nodes and the adjacency list
