@@ -38,11 +38,16 @@ public:
     Graph(int numNodes, std::vector<std::vector<int>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
 
+    std::vector<std::vector<int>> getAdj() { return adj; }
+    std::vector<int> getNodeValues() { return nodeValues; }
+
     void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
     void addNode();
     std::vector<int> dfs(int startNode);
-    void dfsCriticalConditions(int node, int parentNode = -1);
+    // DFS Critcal Conditions returns a pair of vectors, the first vector contains the articulation points 
+    // and the second vector contains the bridges
+    std::pair<std::vector<bool>, std::vector< std::vector<int> > > dfsCriticalConditions(int node, int parentNode = -1); 
     std::vector<int> bfs(int startNode);
     int dijkstra(int startNode, int endNode);
     int dijkstra(std::vector<int> startNodes, std::vector<int> endNodes);
@@ -149,7 +154,7 @@ std::vector<int> Graph::dfs(int startNode) {
 
 // DFS implementation for finding articulation points and bridges -> Articulation points will be in isArticulation from class
 // and bridges will be in the returningBridges vector
-void Graph::dfsCriticalConditions(int node, int parentNode) {
+std::pair<std::vector<bool>, std::vector< std::vector<int> > > Graph::dfsCriticalConditions(int node, int parentNode) {
     std::vector<bool> visited(numNodes, false);
     std::vector<int> lvl(numNodes, -1);
     std::vector<int> low(numNodes, -1);
@@ -161,19 +166,20 @@ void Graph::dfsCriticalConditions(int node, int parentNode) {
             dfsCritical(i, -1, lvl, low, visited, isArticulation, bridges);
         }
     }
-    std::cout << "Articulation points:\n";
-    for(int i = 0; i < numNodes; ++i) {
-        if(isArticulation[i]) {
-            std::cout << i << " ";
-        }
-    }
-    std::cout << "\n Bridges:\n";
-    for(int i = 0; i < bridges.size(); ++i) {
-        for(int j = 0; j < bridges[i].size(); ++j) {
-            std::cout << bridges[i][j] << " ";
-        }
-        std::cout << "\n";
-    }
+    return {isArticulation, bridges};
+    // std::cout << "Articulation points:\n";
+    // for(int i = 0; i < numNodes; ++i) {
+    //     if(isArticulation[i]) {
+    //         std::cout << i << " ";
+    //     }
+    // }
+    // std::cout << "\n Bridges:\n";
+    // for(int i = 0; i < bridges.size(); ++i) {
+    //     for(int j = 0; j < bridges[i].size(); ++j) {
+    //         std::cout << bridges[i][j] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
 }
 
 void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low, std::vector<bool>& visited, std::vector<bool>& isArticulation, std::vector<std::vector<int>>& bridges) {
