@@ -134,6 +134,24 @@ void Graph::dfsCriticalConditions(int node, int parentNode) {
     std::vector<bool> isArticulation(numNodes, false);
     std::vector<std::vector<int>> bridges(numNodes);
     dfsCritical(node, parentNode, lvl, low, visited, isArticulation, bridges);
+    for(int i = 0; i < numNodes; ++i) {
+        if(!visited[i]) {
+            dfsCritical(i, -1, lvl, low, visited, isArticulation, bridges);
+        }
+    }
+    std::cout << "Articulation points:\n";
+    for(int i = 0; i < numNodes; ++i) {
+        if(isArticulation[i]) {
+            std::cout << i << " ";
+        }
+    }
+    std::cout << "\n Bridges:\n";
+    for(int i = 0; i < bridges.size(); ++i) {
+        for(int j = 0; j < bridges[i].size(); ++j) {
+            std::cout << bridges[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
 }
 
 void Graph::dfsCritical(int node, int parentNode, std::vector<int>& lvl, std::vector<int>& low, std::vector<bool>& visited, std::vector<bool>& isArticulation, std::vector<std::vector<int>>& bridges) {
