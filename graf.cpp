@@ -43,6 +43,7 @@ public:
     void dfsCriticalConditions(int node, int parentNode = -1);
     std::vector<int> bfs(int startNode);
     int dijkstra(int startNode, int endNode);
+    int dijkstra(std::vector<int> startNodes, std::vector<int> endNodes);
     std::vector<int> bellmanFord(int startNode);
     bool isBipartite();
     std::vector<int> topologicalSort();
@@ -202,9 +203,9 @@ std::vector<int> Graph::bfs(int startNode) {
     return returningBFS;
 }
 
-// TO DO: Dijkstra algorithm should return VECTOR not INT and you can get the SIZE by VECTOR.SIZE() instead
 // Dijkstra's algorithm returning the shortest distance between two nodes using a vector of edges
-int Graph::dijkstra(int startNode, int endNode) {
+int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
+{
     std::vector<int> dist(numNodes, 1000000000); // vector of distances from the start node to the other nodes
     std::priority_queue<std::pair<int, int>> pq; // priority queue of pairs of distances and nodes
     if(edges.empty()) // if the vector of edges is empty then we create it
@@ -213,8 +214,10 @@ int Graph::dijkstra(int startNode, int endNode) {
                 edges.push_back({i, adj[i][j], 1}); // adding the edges to the vector
             }
     }
-    dist[startNode] = 0; // the distance from the start node to itself is 0
-    pq.push(std::make_pair(0, startNode)); // adding the start node to the priority queue
+    for(auto startNode: startNodes){
+        dist[startNode] = 0; // the distance from the start node to itself is 0
+        pq.push(std::make_pair(0, startNode)); // adding the start node to the priority queue
+    }
     while(!pq.empty()) {
         int currentNode = pq.top().second; // the current node is the second element of the pair
         pq.pop(); // removing the current node from the priority queue
@@ -229,7 +232,12 @@ int Graph::dijkstra(int startNode, int endNode) {
             }
         }
     }
-    return dist[endNode]; // returning the distance from the start node to the end node
+    int minDist = 1000000000;
+    for(auto endNode: endNodes){
+        if(dist[endNode] < minDist)
+            minDist = dist[endNode];
+    }
+    return minDist; // returning the distance from the start node to the end node
 }
 
 std::vector<int> Graph::bellmanFord(int startNode) {
