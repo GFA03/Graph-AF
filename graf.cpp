@@ -64,6 +64,9 @@ Graph::Graph(int numNodes) {
 
 Graph::Graph(std::vector<std::vector<int>> matrix)
 {
+    numNodes = matrix.size() * matrix.size();
+    adj.resize(numNodes);
+    nodeValues.resize(numNodes);
     for(int i = 0 ; i < matrix.size(); i++) {
         for(int j = 0; j < matrix[i].size(); j++) {
             if(matrix[i][j] == 1) {
