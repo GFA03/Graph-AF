@@ -140,7 +140,6 @@ std::vector<int> Graph::dfs(int startNode) {
     std::vector<int> returningDFS; // the vector of the DFS that will be returned
     visited[startNode] = true; // marking the start node as visited
     s.push(startNode); // adding the start node to the stack
-    returningDFS.push_back(startNode); // adding the start node to the DFS
     while(!s.empty()) { // while the stack is not empty means that we still have nodes to visit
         int currentNode = s.top(); // the current node is the top node in the stack
         s.pop(); // removing the current node from the stack
