@@ -25,6 +25,7 @@ class Graph
 private:
     int numNodes;
     std::vector<std::vector<int>> adj;
+    std::vector<bool> visited;
     std::vector<edge> edges;
     std::vector<int> nodeValues;
 
@@ -34,6 +35,7 @@ private:
     void unionSet(int node1, int node2, std::vector<int> &parent, std::vector<int> &rank);
     // Made two dfsCritical because in dfsCriticalConditions I reset the visited vector and then calling the dfsCritical
     void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &visited, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
+    void resetVisited() { visited = std::vector<bool>(numNodes, false); }
 
 public:
     Graph(int numNodes = 0);
@@ -43,6 +45,7 @@ public:
 
     std::vector<std::vector<int>> getAdj() { return adj; }
     std::vector<int> getNodeValues() { return nodeValues; }
+    std::vector<bool> getVisited() { return visited; }
 
     void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
@@ -64,6 +67,7 @@ Graph::Graph(int numNodes)
 {
     this->numNodes = numNodes;
     adj.resize(numNodes);
+    visited.resize(numNodes);
 }
 
 Graph::Graph(std::vector<std::vector<int>> matrix)
@@ -96,6 +100,7 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj)
 {
     this->numNodes = numNodes;
     this->adj = adj;
+    this->visited = std::vector<bool>(numNodes, false);
     // for(int i = 0; i < adj.size(); ++i) {
     //     for(int j = 0; j < adj[i].size(); ++j) {
     //         edges.push_back({i, adj[i][j], 1});
@@ -109,6 +114,7 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> 
     this->numNodes = numNodes;
     this->adj = adj;
     this->edges = edges;
+    this->visited = std::vector<bool>(numNodes, false);
 }
 
 void Graph::constructConnections(std::vector<std::vector<int>> connections, bool isDirected)
@@ -164,7 +170,6 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
 // Depth first search returning a vector with the order of the nodes visited
 std::vector<int> Graph::dfs(int startNode)
 {
-    std::vector<bool> visited(numNodes, false);
     std::stack<int> s;             // stack of nodes
     std::vector<int> returningDFS; // the vector of the DFS that will be returned
     visited[startNode] = true;     // marking the start node as visited
@@ -190,7 +195,7 @@ std::vector<int> Graph::dfs(int startNode)
 // and bridges will be in the returningBridges vector
 std::pair<std::vector<bool>, std::vector<std::vector<int>>> Graph::dfsCriticalConditions(int node, int parentNode)
 {
-    std::vector<bool> visited(numNodes, false);
+    resetVisited();
     std::vector<int> lvl(numNodes, -1);
     std::vector<int> low(numNodes, -1);
     std::vector<bool> isArticulation(numNodes, false);
