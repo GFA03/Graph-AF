@@ -24,17 +24,22 @@ class Graph
 {
 private:
     int numNodes;
-    std::vector<std::vector<int>> adj;
+    std::vector<std::vector<int>> adj; // adjaency list
     std::vector<bool> visited;
     std::vector<edge> edges;
-    std::vector<int> nodeValues;
+    std::vector<int> nodeValues; // node Values
 
     // functions for union find algorithm
     void makeSet(int node, std::vector<int> &parent, std::vector<int> &rank);
     int find(int node, std::vector<int> &parent);
     void unionSet(int node1, int node2, std::vector<int> &parent, std::vector<int> &rank);
-    // Made two dfsCritical because in dfsCriticalConditions I reset the visited vector and then calling the dfsCritical
+    // Made two dfsCritical because in dfsCriticalConditions I reset the visited vector and then call dfsCritical
     void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &visited, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
+
+    // returning the position of a node from a matrix indices(i and j)
+    int getPos(int n, int x, int y) { return x * n + y; }
+
+    // resetting the visited vector
     void resetVisited() { visited = std::vector<bool>(numNodes, false); }
 
 public:
@@ -47,19 +52,38 @@ public:
     std::vector<int> getNodeValues() { return nodeValues; }
     std::vector<bool> getVisited() { return visited; }
 
+    // usually most problems gives you a vector of edges
+    // this method converts the vector into an adjaency list
     void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
+
+    // adding in the edge structure for Dijkstra algorithm
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
+
+    // incresing numNodes with 1
     void addNode();
+
+    // Depth first search returning a vector of nodes in order
     std::vector<int> dfs(int startNode);
     // DFS Critcal Conditions returns a pair of vectors, the first vector contains the articulation points
     // and the second vector contains the bridges
     std::pair<std::vector<bool>, std::vector<std::vector<int>>> dfsCriticalConditions(int node, int parentNode = -1);
+
+    // Breadth first search returning a vector of nodes in order
     std::vector<int> bfs(int startNode);
-    int dijkstra(int startNode, int endNode);
+
+    // Dijkstra's algorithm returning the shortest distance between two nodes
     int dijkstra(std::vector<int> startNodes, std::vector<int> endNodes);
+
+    // Bellman Ford algorithm returning the shortest distance from one node to all the other nodes
     std::vector<int> bellmanFord(int startNode);
+
+    // check if the graph is bipartite returning true or false
     bool isBipartite();
+
+    // topological sorting of a graph using Kahn's algorithm returning a vector with the order of the nodes
     std::vector<int> topologicalSort();
+
+    // minimum spanning tree using Kruskal's algorithm returning a vector of edges
     std::vector<edge> minimumSpanningTree();
 };
 // initialising graph using just the number of nodes
@@ -70,6 +94,7 @@ Graph::Graph(int numNodes)
     visited.resize(numNodes);
 }
 
+// initialising graph using a matrix of nodes
 Graph::Graph(std::vector<std::vector<int>> matrix)
 {
     numNodes = matrix.size() * matrix.size();
@@ -81,16 +106,16 @@ Graph::Graph(std::vector<std::vector<int>> matrix)
         {
             if (matrix[i][j] == 1)
             {
-                nodeValues[i * matrix.size() + j] = 1;
+                nodeValues[getPos(matrix.size(), i, j)] = 1;
             }
             if (i - 1 >= 0)
-                adj[i * matrix.size() + j].push_back((i - 1) * matrix.size() + j);
+                adj[getPos(matrix.size(), i, j)].push_back((i - 1) * matrix.size() + j);
             if (i + 1 < matrix.size())
-                adj[i * matrix.size() + j].push_back((i + 1) * matrix.size() + j);
+                adj[getPos(matrix.size(), i, j)].push_back((i + 1) * matrix.size() + j);
             if (j - 1 >= 0)
-                adj[i * matrix.size() + j].push_back(i * matrix.size() + j - 1);
+                adj[getPos(matrix.size(), i, j)].push_back(getPos(matrix.size(), i, j) - 1);
             if (j + 1 < matrix.size())
-                adj[i * matrix.size() + j].push_back(i * matrix.size() + j + 1);
+                adj[getPos(matrix.size(), i, j)].push_back(getPos(matrix.size(), i, j) + 1);
         }
     }
 }
@@ -144,6 +169,8 @@ void Graph::addNode()
 // adding edge to the graph
 void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
 {
+    if (node1 == node2)
+        return;
     // Check if the edge already exists in the adjacency list for undirected graph
     if (!isDirected)
     {
@@ -170,6 +197,7 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
 // Depth first search returning a vector with the order of the nodes visited
 std::vector<int> Graph::dfs(int startNode)
 {
+    resetVisited();
     std::stack<int> s;             // stack of nodes
     std::vector<int> returningDFS; // the vector of the DFS that will be returned
     visited[startNode] = true;     // marking the start node as visited
@@ -261,7 +289,7 @@ void Graph::dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::ve
 // Breadth first search returning a vector with the order of the nodes visited
 std::vector<int> Graph::bfs(int startNode)
 {
-    std::vector<bool> visited(numNodes, false);
+    resetVisited();
     std::vector<int> returningBFS; // the vector of the BFS that will be returned
     std::queue<int> q;             // queue of nodes
     visited[startNode] = true;     // marking the start node as visited
