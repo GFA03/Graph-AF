@@ -35,7 +35,7 @@ private:
     void unionSet(int node1, int node2, std::vector<int> &parent, std::vector<int> &rank);
 
     // function used by dfsCriticalConnections because I reset the visited vector first
-    void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &visited, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
+    void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
 
     // returning the position of a node from a matrix indices(i and j)
     int getPos(int n, int x, int y) { return x * n + y; }
@@ -224,12 +224,12 @@ std::pair<std::vector<bool>, std::vector<std::vector<int>>> Graph::dfsCriticalCo
     std::vector<int> low(numNodes, -1);
     std::vector<bool> isArticulation(numNodes, false);
     std::vector<std::vector<int>> bridges;
-    dfsCritical(node, parentNode, lvl, low, visited, isArticulation, bridges);
+    dfsCritical(node, parentNode, lvl, low, isArticulation, bridges);
     for (int i = 0; i < numNodes; ++i)
     {
         if (!visited[i])
         {
-            dfsCritical(i, -1, lvl, low, visited, isArticulation, bridges);
+            dfsCritical(i, -1, lvl, low, isArticulation, bridges);
         }
     }
     return {isArticulation, bridges};
@@ -260,7 +260,7 @@ std::pair<std::vector<bool>, std::vector<std::vector<int>>> Graph::dfsCriticalCo
  * @param isArticulation Vector to mark nodes as articulation points.
  * @param bridges Vector of vectors to store bridge edges (articulation points).
  */
-void Graph::dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &visited, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges)
+void Graph::dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges)
 {
     // Set level and low value for the current node
     if (parentNode == -1)
@@ -280,7 +280,7 @@ void Graph::dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::ve
         if (!visited[neighbour])
         {
             // Recur for unvisited neighbors
-            dfsCritical(neighbour, node, lvl, low, visited, isArticulation, bridges);
+            dfsCritical(neighbour, node, lvl, low, isArticulation, bridges);
             children++;
 
             // Update low value of the current node based on its children
