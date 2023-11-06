@@ -223,7 +223,7 @@ std::pair<std::vector<bool>, std::vector<std::vector<int>>> Graph::dfsCriticalCo
     std::vector<int> lvl(numNodes, -1);
     std::vector<int> low(numNodes, -1);
     std::vector<bool> isArticulation(numNodes, false);
-    std::vector<std::vector<int>> bridges(numNodes);
+    std::vector<std::vector<int>> bridges;
     dfsCritical(node, parentNode, lvl, low, visited, isArticulation, bridges);
     for (int i = 0; i < numNodes; ++i)
     {
@@ -570,51 +570,60 @@ std::vector<edge> Graph::minimumSpanningTree()
 
 int main()
 {
-    std::ifstream fin("graf.in");
-    // std::ifstream fin("graf2.in");
-    int n, m;
-    fin >> n >> m;
-    std::vector<std::vector<int>> adj(n + 1);
-    for (int i = 0; i < m; i++)
-    {
-        int x, y;
-        fin >> x >> y;
-        adj[x].push_back(y);
-        adj[y].push_back(x);
-    }
-    Graph g(n, adj);
-    g.dfsCriticalConnections(0);
+    std::cout << "Hello, world!" << std::endl;
     return 0;
 }
 
-// int main () {
-//     std::ifstream fin("graf.in");
-//     // std::ifstream fin("graf2.in");
-//     int n, m;
-//     fin >> n >> m;
-//     // std::vector<std::vector<int>> adj(n+1);
-//     // for(int i = 0; i < m; i++)
-//     // {
-//     //     int x, y;
-//     //     fin >> x >> y;
-//     //     adj[x].push_back(y);
-//     //     adj[y].push_back(x);
-//     // }
-//     std::vector<std::vector<int>> adj(n);
-//     std::vector<edge> edges(m);
-//     for(int i = 0; i < m; i++)
-//     {
-//         int x, y, w;
-//         fin >> x >> y >> w;
-//         adj[x].push_back(y);
-//         adj[y].push_back(x);
-//         edges[i] = {x, y, w};
-//     }
-//     Graph g(n, adj, edges);
-//     // std::cout << g.dijkstra(1, 4);
-//     std::vector<edge> v = g.minimumSpanningTree();
-//     for(int i = 0; i < v.size(); ++i) {
-//         std::cout << v[i].node1 << " " << v[i].node2 << " " << v[i].weight << "\n";
-//     }
-//     return 0;
-// }
+/*
+--------------------------------------------------------------------------------------------------------------------------------------------
+                                POSSIBLE BIPARTITION
+
+
+class Solution {
+public:
+    bool possibleBipartition(int n, vector<vector<int>>& dislikes) {
+        vector<vector<int>> nodes(n+1);
+        for(int i = 0; i < dislikes.size(); i++) {
+            nodes[dislikes[i][0]].push_back(dislikes[i][1]);
+            nodes[dislikes[i][1]].push_back(dislikes[i][0]);
+        }
+        Graph g(n+1, nodes);
+        return g.isBipartite();
+    }
+};
+--------------------------------------------------------------------------------------------------------------------------------------------
+                                Course Schedule II
+
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> adj(numCourses);
+        for(auto i: prerequisites) {
+            adj[i[1]].push_back(i[0]);
+        }
+        vector<int> topologicalSort;
+        Graph g(numCourses, adj);
+        topologicalSort = g.topologicalSort();
+        if(topologicalSort.size() != numCourses)
+            return {};
+        return topologicalSort;
+    }
+};
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+*/
