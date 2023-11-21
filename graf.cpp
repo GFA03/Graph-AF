@@ -1,95 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <stack>
-#include <queue>
-#include <algorithm>
-#include <fstream>
-#include <unordered_set>
-
-// creating a struct for the edges of the graph
-struct edge
-{
-    int node1;
-    int node2;
-    int weight;
-};
-
-// overloading the < operator for the edges
-bool operator<(const edge &a, const edge &b)
-{
-    return a.weight < b.weight;
-}
-
-class Graph
-{
-private:
-    int numNodes;
-    std::vector<std::vector<int>> adj; // adjaency list
-    std::vector<bool> visited;
-    std::vector<edge> edges;
-    std::vector<int> nodeValues; // node Values
-
-    // functions for union find algorithm
-    void makeSet(int node, std::vector<int> &parent, std::vector<int> &rank);
-    int find(int node, std::vector<int> &parent);
-    void unionSet(int node1, int node2, std::vector<int> &parent, std::vector<int> &rank);
-
-    // function used by dfsCriticalConnections because I reset the visited vector first
-    void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
-
-    // returning the position of a node from a matrix indices(i and j)
-    int getPos(int n, int x, int y) { return x * n + y; }
-
-    // resetting the visited vector
-    void resetVisited() { visited = std::vector<bool>(numNodes, false); }
-
-public:
-    Graph(int numNodes = 0);
-
-    // initialising graph for shortest bridge problem, each element in the matrix is a node
-    Graph(std::vector<std::vector<int>> matrix);
-
-    Graph(int numNodes, std::vector<std::vector<int>> adj);
-    Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
-
-    std::vector<std::vector<int>> getAdj() { return adj; }
-    std::vector<int> getNodeValues() { return nodeValues; }
-    std::vector<bool> getVisited() { return visited; }
-
-    // usually most problems gives you a vector of edges; this method converts the vector into an adjaency list
-    void constructConnections(std::vector<std::vector<int>> connections, bool isDirected = false);
-
-    // adding in the edge structure for Dijkstra algorithm
-    void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
-
-    // incresing numNodes with 1
-    void addNode();
-
-    // Depth first search returning a vector of nodes in order
-    std::vector<int> dfs(int startNode);
-
-    // DFS Critcal Connections returns a pair of vectors, the first vector contains the articulation points
-    // and the second vector contains the bridges
-    std::pair<std::vector<bool>, std::vector<std::vector<int>>> dfsCriticalConnections(int node);
-
-    // Breadth first search returning a vector of nodes in order
-    std::vector<int> bfs(int startNode);
-
-    // Dijkstra's algorithm returning the shortest distance between two nodes (or two sets of nodes)
-    int dijkstra(std::vector<int> startNodes, std::vector<int> endNodes);
-
-    // Bellman Ford algorithm returning the shortest distance from one node to all the other nodes
-    std::vector<int> bellmanFord(int startNode);
-
-    // check if the graph is bipartite returning true or false
-    bool isBipartite();
-
-    // topological sorting of a graph using Kahn's algorithm returning a vector with the order of the nodes
-    std::vector<int> topologicalSort();
-
-    // minimum spanning tree using Kruskal's algorithm returning a vector of edges
-    std::vector<edge> minimumSpanningTree();
-};
+#include "graf.h"
 
 Graph::Graph(int numNodes)
 {
@@ -98,35 +7,10 @@ Graph::Graph(int numNodes)
     visited.resize(numNodes);
 }
 
-Graph::Graph(std::vector<std::vector<int>> matrix)
-{
-    numNodes = matrix.size() * matrix.size();
-    adj.resize(numNodes);
-    nodeValues.resize(numNodes);
-    for (int i = 0; i < matrix.size(); i++)
-    {
-        for (int j = 0; j < matrix[i].size(); j++)
-        {
-            if (matrix[i][j] == 1)
-            {
-                nodeValues[getPos(matrix.size(), i, j)] = 1;
-            }
-            if (i - 1 >= 0)
-                adj[getPos(matrix.size(), i, j)].push_back((i - 1) * matrix.size() + j);
-            if (i + 1 < matrix.size())
-                adj[getPos(matrix.size(), i, j)].push_back((i + 1) * matrix.size() + j);
-            if (j - 1 >= 0)
-                adj[getPos(matrix.size(), i, j)].push_back(getPos(matrix.size(), i, j) - 1);
-            if (j + 1 < matrix.size())
-                adj[getPos(matrix.size(), i, j)].push_back(getPos(matrix.size(), i, j) + 1);
-        }
-    }
-}
-
 // initialising graph using the number of nodes and the adjacency list
-Graph::Graph(int numNodes, std::vector<std::vector<int>> adj)
+Graph::Graph(std::vector<std::vector<int>> adj)
 {
-    this->numNodes = numNodes;
+    this->numNodes = adj.size();
     this->adj = adj;
     this->visited = std::vector<bool>(numNodes, false);
 }
@@ -139,15 +23,19 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> 
     this->visited = std::vector<bool>(numNodes, false);
 }
 
-void Graph::constructConnections(std::vector<std::vector<int>> connections, bool isDirected)
+Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected, bool hasCost)
 {
+    this->numNodes = numNodes;
     if (!isDirected)
     {
         for (auto edge : connections)
         {
             adj[edge[0]].push_back(edge[1]);
             adj[edge[1]].push_back(edge[0]);
-            edges.push_back({edge[0], edge[1], 1});
+            if (hasCost)
+                edges.push_back({edge[0], edge[1], edge[2]});
+            else
+                edges.push_back({edge[0], edge[1], 1});
         }
         return;
     }
@@ -165,21 +53,20 @@ void Graph::addNode()
 
 void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
 {
-    if (node1 == node2)
+    if (node1 == node2 || node1 > numNodes || node2 > numNodes)
         return;
 
     // Check if the edge already exists in the adjacency list for undirected graph
-    if (!isDirected)
+
+    for (const auto &neighbor : adj[node1])
     {
-        for (const auto &neighbor : adj[node1])
+        if (neighbor == node2)
         {
-            if (neighbor == node2)
-            {
-                // Edge already exists, so skip adding it again
-                return;
-            }
+            // Edge already exists, so skip adding it again
+            return;
         }
     }
+
     // Add the edge to the adjacency list
     adj[node1].push_back(node2);
     edges.push_back({node1, node2, weight});
@@ -570,60 +457,7 @@ std::vector<edge> Graph::minimumSpanningTree()
 
 int main()
 {
-    std::cout << "Hello, world!" << std::endl;
+    std::vector<std::vector<int>> connections = {{1, 2}, {2, 3}, {3, 4}, {2, 4}, {1, 3}};
+
     return 0;
 }
-
-/*
---------------------------------------------------------------------------------------------------------------------------------------------
-                                POSSIBLE BIPARTITION
-
-
-class Solution {
-public:
-    bool possibleBipartition(int n, vector<vector<int>>& dislikes) {
-        vector<vector<int>> nodes(n+1);
-        for(int i = 0; i < dislikes.size(); i++) {
-            nodes[dislikes[i][0]].push_back(dislikes[i][1]);
-            nodes[dislikes[i][1]].push_back(dislikes[i][0]);
-        }
-        Graph g(n+1, nodes);
-        return g.isBipartite();
-    }
-};
---------------------------------------------------------------------------------------------------------------------------------------------
-                                Course Schedule II
-
-class Solution {
-public:
-    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
-        vector<vector<int>> adj(numCourses);
-        for(auto i: prerequisites) {
-            adj[i[1]].push_back(i[0]);
-        }
-        vector<int> topologicalSort;
-        Graph g(numCourses, adj);
-        topologicalSort = g.topologicalSort();
-        if(topologicalSort.size() != numCourses)
-            return {};
-        return topologicalSort;
-    }
-};
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
-*/
