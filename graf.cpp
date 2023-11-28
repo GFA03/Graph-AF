@@ -8,41 +8,42 @@ Graph::Graph(int numNodes)
 }
 
 // initialising graph using the number of nodes and the adjacency list
-Graph::Graph(std::vector<std::vector<int>> adj)
+Graph::Graph(std::vector<std::vector<std::pair<int, int>>> adj)
 {
     this->numNodes = adj.size();
     this->adj = adj;
     this->visited = std::vector<bool>(numNodes, false);
 }
 
-Graph::Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges)
-{
-    this->numNodes = numNodes;
-    this->adj = adj;
-    this->edges = edges;
-    this->visited = std::vector<bool>(numNodes, false);
-}
-
-Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected, bool hasCost)
+Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected)
 {
     this->numNodes = numNodes;
     if (!isDirected)
     {
         for (auto edge : connections)
         {
-            adj[edge[0]].push_back(edge[1]);
-            adj[edge[1]].push_back(edge[0]);
-            if (hasCost)
-                edges.push_back({edge[0], edge[1], edge[2]});
+
+            // if the connections vector has edge1, edge2 and the cost between them, push the cost as well
+            if (edge.size() > 2)
+            {
+                adj[edge[0]].push_back({edge[1], edge[2]});
+                adj[edge[1]].push_back({edge[0], edge[2]});
+            }
+            // else push 1 for the cost
             else
-                edges.push_back({edge[0], edge[1], 1});
+            {
+                adj[edge[0]].push_back({edge[1], 1});
+                adj[edge[1]].push_back({edge[0], 1});
+            }
         }
         return;
     }
     for (auto edge : connections)
     {
-        adj[edge[0]].push_back(edge[1]);
-        edges.push_back({edge[0], edge[1], 1});
+        if (edge.size() > 2)
+            adj[edge[0]].push_back({edge[1], edge[2]});
+        else
+            adj[edge[0]].push_back({edge[1], 1});
     }
 }
 
@@ -60,7 +61,7 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
 
     for (const auto &neighbor : adj[node1])
     {
-        if (neighbor == node2)
+        if (neighbor.first == node2)
         {
             // Edge already exists, so skip adding it again
             return;
@@ -68,13 +69,12 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
     }
 
     // Add the edge to the adjacency list
-    adj[node1].push_back(node2);
-    edges.push_back({node1, node2, weight});
+    adj[node1].push_back({node2, weight});
 
     // If the graph is undirected, add the reverse edge
     if (!isDirected)
     {
-        adj[node2].push_back(node1);
+        adj[node2].push_back({node1, weight});
     }
 }
 
@@ -92,7 +92,7 @@ std::vector<int> Graph::dfs(int startNode)
         returningDFS.push_back(currentNode); // adding the current node to the DFS
         for (int i = 0; i < adj[currentNode].size(); i++)
         {
-            int neighbour = adj[currentNode][i];
+            int neighbour = adj[currentNode][i].first;
             if (!visited[neighbour])
             {
                 visited[neighbour] = true;
@@ -164,31 +164,33 @@ void Graph::dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::ve
     // Explore neighbors of the current node
     for (auto neighbour : adj[node])
     {
-        if (!visited[neighbour])
+        // neighbour is a pair {node, weight} => neigh is the node
+        int neigh = neighbour.first;
+        if (!visited[neigh])
         {
             // Recur for unvisited neighbors
-            dfsCritical(neighbour, node, lvl, low, isArticulation, bridges);
+            dfsCritical(neigh, node, lvl, low, isArticulation, bridges);
             children++;
 
             // Update low value of the current node based on its children
-            low[node] = std::min(low[node], low[neighbour]);
+            low[node] = std::min(low[node], low[neigh]);
 
             // Check for articulation points (nodes with no back edge)
-            if (low[neighbour] >= lvl[node] && node != 0)
+            if (low[neigh] >= lvl[node] && node != 0)
             {
                 isArticulation[node] = true;
             }
 
             // Check for bridges (edges connecting nodes with no back edge)
-            if (low[neighbour] > lvl[node])
+            if (low[neigh] > lvl[node])
             {
-                bridges.push_back({node, neighbour});
+                bridges.push_back({node, neigh});
             }
         }
-        else if (neighbour != parentNode)
+        else if (neigh != parentNode)
         {
             // Update low value if the neighbour is not the parent (back edge)
-            low[node] = std::min(low[node], lvl[neighbour]);
+            low[node] = std::min(low[node], lvl[neigh]);
         }
     }
 
@@ -215,10 +217,11 @@ std::vector<int> Graph::bfs(int startNode)
         returningBFS.push_back(currentNode); // adding the current node to the BFS
         for (int i = 0; i < adj[currentNode].size(); i++)
         {
-            if (!visited[adj[currentNode][i]])
+            int neigh = adj[currentNode][i].first;
+            if (!visited[neigh])
             {
-                visited[adj[currentNode][i]] = true;
-                q.push(adj[currentNode][i]);
+                visited[neigh] = true;
+                q.push(neigh);
             }
         }
     }
@@ -229,14 +232,6 @@ int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
 {
     std::vector<int> dist(numNodes, 1000000000); // vector of distances from the start node to the other nodes
     std::priority_queue<std::pair<int, int>> pq; // priority queue of pairs of distances and nodes
-    if (edges.empty())                           // if the vector of edges is empty then we create it
-        for (int i = 0; i < adj.size(); ++i)
-        {
-            for (int j = 0; j < adj[i].size(); ++j)
-            {
-                edges.push_back({i, adj[i][j], 1});
-            }
-        }
     for (auto startNode : startNodes)
     {
         dist[startNode] = 0;
@@ -246,21 +241,17 @@ int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
     {
         int currentNode = pq.top().second;
         pq.pop();
-        for (int i = 0; i < edges.size(); i++)
+        for (auto neigh : adj[currentNode])
         {
-            // finding the nodes adjacents to the current node
-            if (edges[i].node1 == currentNode)
-            {
-                int nextNode = edges[i].node2;
-                int weight = edges[i].weight;
+            int nextNode = neigh.first;
+            int weight = neigh.second;
 
-                // if the distance from the next node is bigger than the distance from the current node + the weight of the edge
-                if (dist[nextNode] > dist[currentNode] + weight)
-                {
-                    // the distance from the next node becomes the distance from the current node + the weight of the edge
-                    dist[nextNode] = dist[currentNode] + weight;
-                    pq.push(std::make_pair(-dist[nextNode], nextNode));
-                }
+            // if the distance from the next node is bigger than the distance from the current node + the weight of the edge
+            if (dist[nextNode] > dist[currentNode] + weight)
+            {
+                // the distance from the next node becomes the distance from the current node + the weight of the edge
+                dist[nextNode] = dist[currentNode] + weight;
+                pq.push(std::make_pair(-dist[nextNode], nextNode));
             }
         }
     }
@@ -268,30 +259,52 @@ int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
 
     // search for the shortest path between the start nodes and the end nodes
     for (auto endNode : endNodes)
-    {
-        if (dist[endNode] < minDist)
-            minDist = dist[endNode];
-    }
+        minDist = std::min(minDist, dist[endNode]);
+
     return minDist; // returning the distance from the start node to the end node
 }
 
 std::vector<int> Graph::bellmanFord(int startNode)
 {
-    std::vector<int> dist(numNodes, 1000000000);
+    std::vector<int> dist(numNodes, INT_MAX);
     dist[startNode] = 0;
 
-    // for every node except the start node
-    for (int i = 0; i < numNodes - 1; i++)
+    std::vector<edge> edges;
+
+    // inserting all edges into a single vector
+    for (int i = 0; i < numNodes; ++i)
+    {
+        for (auto neigh : adj[i])
+        {
+            edges.push_back({i, neigh.first, neigh.second});
+        }
+    }
+
+    // relaxing all edges numNodes - 1 times
+    for (int i = 1; i <= numNodes - 1; i++)
     {
         for (int j = 0; j < edges.size(); j++)
         {
             int node1 = edges[j].node1;
             int node2 = edges[j].node2;
             int weight = edges[j].weight;
-            if (dist[node2] > dist[node1] + weight)
+            if (dist[node1] != INT_MAX && dist[node2] > dist[node1] + weight)
             {                                       // if the distance from the second node is bigger than the distance from the first node + the weight of the edge then:
                 dist[node2] = dist[node1] + weight; // the distance from the second node becomes the distance from the first node + the weight of the edge
             }
+        }
+    }
+
+    // checking for negative-weight cycles
+    for (int i = 0; i < edges.size(); i++)
+    {
+        int node1 = edges[i].node1;
+        int node2 = edges[i].node2;
+        int weight = edges[i].weight;
+        if (dist[node1] != INT_MAX && dist[node2] > dist[node1] + weight)
+        {
+            std::cout << "Graph contains negative weight cycle";
+            return {};
         }
     }
     return dist; // returning the vector of distances
@@ -322,7 +335,7 @@ bool Graph::isBipartite()
             q.pop();
             for (int i = 0; i < adj[currentNode].size(); ++i)
             {
-                int nextNode = adj[currentNode][i];
+                int nextNode = adj[currentNode][i].first;
 
                 if (colors[nextNode] == -1)
                 {
@@ -353,7 +366,7 @@ std::vector<int> Graph::topologicalSort()
     {
         for (int j = 0; j < adj[i].size(); ++j)
         {
-            inDegree[adj[i][j]]++;
+            inDegree[adj[i][j].first]++;
         }
     }
 
@@ -376,7 +389,7 @@ std::vector<int> Graph::topologicalSort()
 
         for (int i = 0; i < adj[currentNode].size(); ++i)
         {
-            int nextNode = adj[currentNode][i];
+            int nextNode = adj[currentNode][i].first;
 
             // decreasing the in degree of the next node because we removed the current node from the graph
             inDegree[nextNode]--;
@@ -425,10 +438,13 @@ void Graph::unionSet(int node1, int node2, std::vector<int> &parent, std::vector
     }
 }
 
-std::vector<edge> Graph::minimumSpanningTree()
+std::vector<edge> Graph::kruksalMST()
 {
     std::vector<edge> returningMST; // the vector of edges that will be returned
-    std::vector<edge> sortedEdges = edges;
+    std::vector<edge> sortedEdges;
+    for (int i = 0; i < numNodes; ++i)
+        for (auto neigh : adj[i])
+            sortedEdges.push_back({i, neigh.first, neigh.second});
     std::sort(sortedEdges.begin(), sortedEdges.end()); // sorting the edges by weight
     std::vector<int> parent(numNodes);
     std::vector<int> rank(numNodes);
@@ -453,11 +469,4 @@ std::vector<edge> Graph::minimumSpanningTree()
         }
     }
     return returningMST;
-}
-
-int main()
-{
-    std::vector<std::vector<int>> connections = {{1, 2}, {2, 3}, {3, 4}, {2, 4}, {1, 3}};
-
-    return 0;
 }

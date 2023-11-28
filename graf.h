@@ -26,9 +26,8 @@ class Graph
 {
 private:
     int numNodes;
-    std::vector<std::vector<int>> adj; // adjaency list
+    std::vector<std::vector<std::pair<int, int>>> adj; // adjaency list
     std::vector<bool> visited;
-    std::vector<edge> edges;
 
     // functions for union find algorithm
     void makeSet(int node, std::vector<int> &parent, std::vector<int> &rank);
@@ -38,20 +37,16 @@ private:
     // function used by dfsCriticalConnections because I reset the visited vector first
     void dfsCritical(int node, int parentNode, std::vector<int> &lvl, std::vector<int> &low, std::vector<bool> &isArticulation, std::vector<std::vector<int>> &bridges);
 
-    // returning the position of a node from a matrix indices(i and j)
-    int getPos(int n, int x, int y) { return x * n + y; }
-
     // resetting the visited vector
     void resetVisited() { visited = std::vector<bool>(numNodes, false); }
 
 public:
     Graph(int numNodes = 0);
 
-    Graph(std::vector<std::vector<int>> adj);
-    Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected = false, bool hasCost = false);
-    Graph(int numNodes, std::vector<std::vector<int>> adj, std::vector<edge> edges);
+    Graph(std::vector<std::vector<std::pair<int, int>>> adj);
+    Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected = false);
 
-    std::vector<std::vector<int>> getAdj() { return adj; }
+    std::vector<std::vector<std::pair<int, int>>> getAdj() { return adj; }
     std::vector<bool> getVisited() { return visited; }
 
     // adding in the edge structure for Dijkstra algorithm
@@ -83,5 +78,7 @@ public:
     std::vector<int> topologicalSort();
 
     // minimum spanning tree using Kruskal's algorithm returning a vector of edges
-    std::vector<edge> minimumSpanningTree();
+    std::vector<edge> kruksalMST();
+
+    std::vector<edge> primMST();
 };
