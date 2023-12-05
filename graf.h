@@ -1,4 +1,6 @@
 #pragma
+#ifndef GRAF_H
+#define GRAF_H
 
 #include <iostream>
 #include <vector>
@@ -15,12 +17,6 @@ struct edge
     int node2;
     int weight;
 };
-
-// overloading the < operator for the edges
-bool operator<(const edge &a, const edge &b)
-{
-    return a.weight < b.weight;
-}
 
 class Graph
 {
@@ -82,3 +78,5 @@ public:
 
     std::vector<edge> primMST();
 };
+
+#endif // GRAF_H

@@ -1,5 +1,11 @@
 #include "graf.h"
 
+// overloading the < operator for the edges
+bool operator<(const edge &a, const edge &b)
+{
+    return a.weight < b.weight;
+}
+
 Graph::Graph(int numNodes)
 {
     this->numNodes = numNodes;
@@ -466,6 +472,48 @@ std::vector<edge> Graph::kruksalMST()
 
             // merge the sets
             unionSet(node1, node2, parent, rank);
+        }
+    }
+    return returningMST;
+}
+
+std::vector<edge> Graph::primMST()
+{
+    int startNode = 0;
+    std::vector<edge> returningMST; // the vector of edges that will be returned
+    std::vector<int> dist(numNodes, 1e9);
+    std::vector<int> parent(numNodes, -1);
+    std::vector<bool> visited(numNodes, false);
+    dist[startNode] = 0;
+    for (int i = 0; i < numNodes; ++i)
+    {
+        int currentNode = -1;
+        for (int j = 0; j < numNodes; ++j)
+        {
+            if (!visited[j] && (currentNode == -1 || dist[j] < dist[currentNode]))
+            {
+                currentNode = j;
+            }
+        }
+        if (dist[currentNode] == 1e9)
+        {
+            std::cout << "No MST!";
+            return {};
+        }
+        visited[currentNode] = true;
+        if (parent[currentNode] != -1)
+        {
+            returningMST.push_back({parent[currentNode], currentNode, dist[currentNode]});
+        }
+        for (auto neigh : adj[currentNode])
+        {
+            int nextNode = neigh.first;
+            int weight = neigh.second;
+            if (dist[nextNode] > weight)
+            {
+                dist[nextNode] = weight;
+                parent[nextNode] = currentNode;
+            }
         }
     }
     return returningMST;
