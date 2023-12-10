@@ -10,6 +10,8 @@
 #include <fstream>
 #include <unordered_set>
 
+#define INT_MAX 1e9
+
 // creating a struct for the edges of the graph
 struct edge
 {
