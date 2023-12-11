@@ -76,7 +76,7 @@ public:
     std::vector<int> topologicalSort();
 
     // minimum spanning tree using Kruskal's algorithm returning a vector of edges
-    std::vector<edge> kruksalMST();
+    std::vector<edge> kruskalMST();
 
     std::vector<edge> primMST();
 };

@@ -444,7 +444,7 @@ void Graph::unionSet(int node1, int node2, std::vector<int> &parent, std::vector
     }
 }
 
-std::vector<edge> Graph::kruksalMST()
+std::vector<edge> Graph::kruskalMST()
 {
     std::vector<edge> returningMST; // the vector of edges that will be returned
     std::vector<edge> sortedEdges;
