@@ -1,4 +1,9 @@
 #include "graf.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include "graf.h"
+
+namespace py = pybind11;
 
 // overloading the < operator for the edges
 bool operator<(const edge &a, const edge &b)
@@ -56,6 +61,7 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDir
 void Graph::addNode()
 {
     numNodes++;
+    adj.resize(numNodes);
 }
 
 void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
@@ -272,7 +278,7 @@ int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
 
 std::vector<int> Graph::bellmanFord(int startNode)
 {
-    std::vector<int> dist(numNodes, INT_MAX);
+    std::vector<int> dist(numNodes, 1e9);
     dist[startNode] = 0;
 
     std::vector<edge> edges;
@@ -294,7 +300,7 @@ std::vector<int> Graph::bellmanFord(int startNode)
             int node1 = edges[j].node1;
             int node2 = edges[j].node2;
             int weight = edges[j].weight;
-            if (dist[node1] != INT_MAX && dist[node2] > dist[node1] + weight)
+            if (dist[node1] != 1e9 && dist[node2] > dist[node1] + weight)
             {                                       // if the distance from the second node is bigger than the distance from the first node + the weight of the edge then:
                 dist[node2] = dist[node1] + weight; // the distance from the second node becomes the distance from the first node + the weight of the edge
             }
@@ -307,7 +313,7 @@ std::vector<int> Graph::bellmanFord(int startNode)
         int node1 = edges[i].node1;
         int node2 = edges[i].node2;
         int weight = edges[i].weight;
-        if (dist[node1] != INT_MAX && dist[node2] > dist[node1] + weight)
+        if (dist[node1] != 1e9 && dist[node2] > dist[node1] + weight)
         {
             std::cout << "Graph contains negative weight cycle";
             return {};
@@ -517,4 +523,27 @@ std::vector<edge> Graph::primMST()
         }
     }
     return returningMST;
+}
+
+PYBIND11_MODULE(graf, handle)
+{
+    handle.doc() = "Graph class with some useful algorithms";
+
+    py::class_<Graph>(handle, "Graph")
+        .def(py::init<int>())
+        .def(py::init<std::vector<std::vector<std::pair<int, int>>>>())
+        .def(py::init<int, std::vector<std::vector<int>>, bool>())
+        .def("getAdj", &Graph::getAdj)
+        .def("getVisited", &Graph::getVisited)
+        .def("addEdge", &Graph::addEdge)
+        .def("addNode", &Graph::addNode)
+        .def("dfs", &Graph::dfs)
+        .def("dfsCriticalConnections", &Graph::dfsCriticalConnections)
+        .def("bfs", &Graph::bfs)
+        .def("dijkstra", &Graph::dijkstra)
+        .def("bellmanFord", &Graph::bellmanFord)
+        .def("isBipartite", &Graph::isBipartite)
+        .def("topologicalSort", &Graph::topologicalSort)
+        .def("kruskalMST", &Graph::kruskalMST)
+        .def("primMST", &Graph::primMST);
 }

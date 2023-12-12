@@ -1,0 +1,5 @@
+/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build/CMakeFiles/graf.dir
+/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build/CMakeFiles/edit_cache.dir
+/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build/CMakeFiles/rebuild_cache.dir
+/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build/pybind11/CMakeFiles/edit_cache.dir
+/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build/pybind11/CMakeFiles/rebuild_cache.dir
