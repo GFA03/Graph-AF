@@ -22,8 +22,10 @@ class GraphVisualization:
         self.selected_node_index = None
         self.offset_x, self.offset_y = 0, 0
 
-    def does_node_intersect(self, pos):
-        for coordinates in self.graph.getCoordinates().values():
+    def does_node_intersect(self, pos, exclude_index = None):
+        for node, coordinates in self.graph.getCoordinates().items():
+            if node == exclude_index:
+                continue
             distance = ((pos[0] - coordinates[0]) ** 2 + (pos[1] - coordinates[1]) ** 2) ** 0.5
             if distance < 2 * self.node_radius:  # Assuming the nodes are circles with radius node_radius
                 return True
@@ -72,7 +74,11 @@ class GraphVisualization:
 
                 elif event.type == pygame.MOUSEMOTION:
                     if self.dragging and self.selected_node_index is not None:
-                        self.graph.setCoordinates(self.selected_node_index, (event.pos[0] + self.offset_x, event.pos[1] + self.offset_y))
+                        new_x = event.pos[0] + self.offset_x
+                        new_y = event.pos[1] + self.offset_y
+
+                        if not self.does_node_intersect((new_x, new_y), exclude_index = self.selected_node_index):
+                            self.graph.setCoordinates(self.selected_node_index, (new_x, new_y))
 
             screen.fill((255, 255, 255))  # Fill the background with white
 
