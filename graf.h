@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <unordered_set>
+#include <unordered_map>
 
 // creating a struct for the edges of the graph
 struct edge
@@ -24,6 +25,7 @@ private:
     int numNodes;
     std::vector<std::vector<std::pair<int, int>>> adj; // adjaency list
     std::vector<bool> visited;
+    std::unordered_map<int, std::pair<float, float>> coordinates;
 
     // functions for union find algorithm
     void makeSet(int node, std::vector<int> &parent, std::vector<int> &rank);
@@ -44,12 +46,15 @@ public:
 
     std::vector<std::vector<std::pair<int, int>>> getAdj() { return adj; }
     std::vector<bool> getVisited() { return visited; }
+    std::unordered_map<int, std::pair<float, float>> getCoordinates() { return coordinates; }
+
+    void setCoordinates(int node, std::pair<float, float> coordinates);
 
     // adding in the edge structure for Dijkstra algorithm
     void addEdge(int node1, int node2, int weight = 1, bool isDirected = false);
 
     // incresing numNodes with 1
-    void addNode();
+    void addNode(std::pair<float, float> coordinates = std::make_pair(0, 0));
 
     // Depth first search returning a vector of nodes in order
     std::vector<int> dfs(int startNode);

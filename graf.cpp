@@ -58,10 +58,11 @@ Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDir
     }
 }
 
-void Graph::addNode()
+void Graph::addNode(std::pair<float, float> coordinates)
 {
     numNodes++;
-    adj.resize(numNodes);
+    this->adj.resize(numNodes);
+    this->coordinates[numNodes - 1] = coordinates;
 }
 
 void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
@@ -88,6 +89,14 @@ void Graph::addEdge(int node1, int node2, int weight, bool isDirected)
     {
         adj[node2].push_back({node1, weight});
     }
+}
+
+void Graph::setCoordinates(int node, std::pair<float, float> coordinates)
+{
+    // check if the node exists
+    if (node >= numNodes)
+        return;
+    this->coordinates[node] = coordinates;
 }
 
 std::vector<int> Graph::dfs(int startNode)
@@ -535,8 +544,10 @@ PYBIND11_MODULE(graf, handle)
         .def(py::init<int, std::vector<std::vector<int>>, bool>())
         .def("getAdj", &Graph::getAdj)
         .def("getVisited", &Graph::getVisited)
+        .def("getCoordinates", &Graph::getCoordinates)
         .def("addEdge", &Graph::addEdge)
         .def("addNode", &Graph::addNode)
+        .def("setCoordinates", &Graph::setCoordinates)
         .def("dfs", &Graph::dfs)
         .def("dfsCriticalConnections", &Graph::dfsCriticalConnections)
         .def("bfs", &Graph::bfs)
