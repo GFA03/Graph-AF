@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/gfa/facultate/An2/Sem1/AF/Graph-AF/build",
+  "command": "/usr/bin/g++ -Dgraf_EXPORTS -isystem /home/gfa/facultate/An2/Sem1/AF/Graph-AF/pybind11/include -isystem /usr/include/python3.10 -g -fPIC -fvisibility=hidden -o CMakeFiles/graf.dir/graf.cpp.o -c /home/gfa/facultate/An2/Sem1/AF/Graph-AF/graf.cpp",
+  "file": "/home/gfa/facultate/An2/Sem1/AF/Graph-AF/graf.cpp"
+}
+]
