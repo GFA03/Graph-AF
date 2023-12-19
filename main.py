@@ -4,27 +4,39 @@ import sys
 
 class GraphVisualization:
     def __init__(self, graph):
+        # Initialize the graph from C++ code
         self.graph = graph
+
+        # Set up the visualization parameters
         self.node_radius = 20
-        self.node_color = (255, 0, 0)  # RGB color for nodes
-        self.node_text_color = (255, 255, 255)  # RGB color for node text
+        self.node_fill_color = (255, 255, 255)  # RGB color for nodes
+        self.node_outline_color = (0, 0, 0)  # RGB color for node outline
+        self.node_text_color = (0, 0, 0)  # RGB color for node text
         self.edge_color = (0, 0, 0)   # RGB color for edges
         self.message_color = (255, 0, 0)  # RGB color for alert message
 
+        # Set up the add node button
         self.add_node_button_rect = pygame.Rect(10, 10, 100, 30)
         self.add_node_button_color = (0, 255, 0)  # RGB color for the button
         self.add_node_button_text_color = (255, 255, 255)  # RGB color for the button text
 
+        # Set up the add edge button
+        self.add_edge_button_rect = pygame.Rect(10, 50, 100, 30)
+        self.add_edge_button_color = (0, 255, 0)  # RGB color for the button
+        self.add_edge_button_text_color = (255, 255, 255)
+
+        # Set up the flags
         self.adding_node = False
         self.collision_alert = False
 
+        # Set up the dragging parameters
         self.dragging = False
         self.selected_node_index = None
         self.offset_x, self.offset_y = 0, 0
 
     def does_node_intersect(self, pos, exclude_index = None):
         for node, coordinates in self.graph.getCoordinates().items():
-            if node == exclude_index:
+            if exclude_index is not None and node == exclude_index:
                 continue
             distance = ((pos[0] - coordinates[0]) ** 2 + (pos[1] - coordinates[1]) ** 2) ** 0.5
             if distance < 2 * self.node_radius:  # Assuming the nodes are circles with radius node_radius
@@ -87,7 +99,12 @@ class GraphVisualization:
 
             # Draw nodes
             for node, coordinates in self.graph.getCoordinates().items():
-                pygame.draw.circle(screen, self.node_color, (int(coordinates[0]), int(coordinates[1])), self.node_radius)
+                # Draw filled circle in white
+                pygame.draw.circle(screen, self.node_fill_color, (int(coordinates[0]), int(coordinates[1])), self.node_radius)
+
+                # Draw black outline of circle
+                pygame.draw.circle(screen, self.node_outline_color, (int(coordinates[0]), int(coordinates[1])), self.node_radius, width=2)
+
                 font = pygame.font.Font(None, 24)
                 text = font.render(str(node), True, self.node_text_color)
                 text_rect = text.get_rect(center=(int(coordinates[0]), int(coordinates[1])))
@@ -98,6 +115,12 @@ class GraphVisualization:
             font = pygame.font.Font(None, 24)
             text = font.render("Add Node", True, self.add_node_button_text_color)
             screen.blit(text, (self.add_node_button_rect.x + 10, self.add_node_button_rect.y + 5))
+
+            # Draw the add edge button
+            pygame.draw.rect(screen, self.add_edge_button_color, self.add_edge_button_rect)
+            font = pygame.font.Font(None, 24)
+            text = font.render("Add Edge", True, self.add_edge_button_text_color)
+            screen.blit(text, (self.add_edge_button_rect.x + 10, self.add_edge_button_rect.y + 5))
 
             # Display collision alert
             if self.collision_alert:
