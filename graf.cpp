@@ -13,6 +13,20 @@ Graph::Graph(int numNodes)
     visited.resize(numNodes);
 }
 
+Graph::Graph(std::vector<std::vector<int>> &adj)
+{
+    this->numNodes = adj.size();
+    this->adj.resize(numNodes);
+    this->visited.resize(numNodes);
+    for (int i = 0; i < numNodes; ++i)
+    {
+        for (int j = 0; j < adj[i].size(); ++j)
+        {
+            this->adj[i].push_back({adj[i][j], 1});
+        }
+    }
+}
+
 // initialising graph using the number of nodes and the adjacency list
 Graph::Graph(std::vector<std::vector<std::pair<int, int>>> adj)
 {
@@ -24,6 +38,7 @@ Graph::Graph(std::vector<std::vector<std::pair<int, int>>> adj)
 Graph::Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected)
 {
     this->numNodes = numNodes;
+    this->adj.resize(numNodes);
     if (!isDirected)
     {
         for (auto edge : connections)
@@ -232,6 +247,44 @@ std::vector<int> Graph::bfs(int startNode)
         }
     }
     return returningBFS;
+}
+
+int Graph::bfsBitManipulation()
+{
+    int finalState = (1 << numNodes) - 1;
+
+    std::queue<std::pair<int, int>> q;
+    // Adding all nodes because we can start from any node
+    for (int i = 0; i < numNodes; ++i)
+        q.push(std::make_pair(i, 1 << i));
+
+    int visitedMap[13][4097];
+
+    int shortestPath = 0;
+    while (!q.empty())
+    {
+        int size = q.size();
+        shortestPath++;
+        for (int i = 0; i < size; ++i)
+        {
+            int currentNode = q.front().first;
+            int currentBitState = q.front().second;
+            q.pop();
+            for (auto neigh : adj[currentNode])
+            {
+                int nextNode = neigh.first;
+                int nextBitState = currentBitState | (1 << nextNode);
+                if (nextBitState == finalState)
+                    return shortestPath;
+                if (visitedMap[nextNode][nextBitState] == 0)
+                {
+                    visitedMap[nextNode][nextBitState] = 1;
+                    q.push(std::make_pair(nextNode, nextBitState));
+                }
+            }
+        }
+    }
+    return -1;
 }
 
 int Graph::dijkstra(std::vector<int> startNodes, std::vector<int> endNodes)
@@ -517,4 +570,103 @@ std::vector<edge> Graph::primMST()
         }
     }
     return returningMST;
+}
+
+int Graph::findStartNode()
+{
+    int in[1000], out[1000];
+    for (int i = 0; i < numNodes; ++i)
+    {
+        in[i] = 0;
+        out[i] = 0;
+    }
+    // number of edges
+    int edges;
+    countInOutDegrees(in, out, edges);
+    int startNode = 0;
+    for (int i = 0; i < numNodes; ++i)
+    {
+        if (out[i] - in[i] == 1)
+            return i;
+        if (out[i] > 0)
+            startNode = i;
+    }
+    return startNode;
+}
+
+void Graph::dfsEuler(int startNode, int outTemp[], std::deque<int> &path)
+{
+    // while the current node still has outgoing edges
+    while (out[startNode] != 0)
+    {
+        // select the next unvisited outgoing edge (outTemp - out will be the first unvisited node)
+        int nextNode = adj[startNode][outTemp[startNode] - out[startNode]].first;
+        out[startNode]--;
+        dfsEuler(nextNode, outTemp, path);
+    }
+    path.push_front(startNode);
+}
+
+void Graph::countInOutDegrees(int in[], int out[], int &edges)
+{
+    for (int i = 0; i < numNodes; ++i)
+    {
+        for (int j = 0; j < adj[i].size(); ++j)
+        {
+            edges++;
+            out[i]++;
+            in[adj[i][j].first]++;
+        }
+    }
+}
+
+bool Graph::isEulerian()
+{
+    int in[1000];
+    for (int i = 0; i < numNodes; ++i)
+    {
+        in[i] = 0;
+        out[i] = 0;
+    }
+    // number of edges
+    int edges;
+    countInOutDegrees(in, out, edges);
+    if (edges == 0)
+        return false;
+    int startNodes = 0, endNodes = 0;
+    for (int i = 0; i < numNodes; ++i)
+    {
+        if (out[i] - in[i] > 1 || in[i] - out[i] > 1)
+            return false;
+        else if (out[i] - in[i] == 1)
+            startNodes++;
+        else if (in[i] - out[i] == 1)
+            endNodes++;
+    }
+    return (startNodes == 0 && endNodes == 0) || (startNodes == 1 && endNodes == 1);
+}
+
+std::deque<int> Graph::findEulerianPath()
+{
+    // outTemp is a copy of the number of outgoing edges as out will be changed in the DFS traversal
+    int in[1000], outTemp[1000];
+    for (int i = 0; i < numNodes; ++i)
+    {
+        in[i] = 0;
+        out[i] = 0;
+        outTemp[i] = 0;
+    }
+    // number of edges
+    int edges;
+    countInOutDegrees(in, out, edges);
+    for (int i = 0; i < numNodes; ++i)
+        outTemp[i] = out[i];
+    std::deque<int> path;
+    if (!isEulerian())
+        return {-1};
+    dfsEuler(findStartNode(), outTemp, path);
+
+    if (path.size() == edges + 1)
+        return path;
+    return {-1};
 }

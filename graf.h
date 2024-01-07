@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <unordered_set>
+#include <unordered_map>
 
 #define INT_MAX 1e9
 
@@ -26,6 +27,7 @@ private:
     int numNodes;
     std::vector<std::vector<std::pair<int, int>>> adj; // adjaency list
     std::vector<bool> visited;
+    int out[1000];
 
     // functions for union find algorithm
     void makeSet(int node, std::vector<int> &parent, std::vector<int> &rank);
@@ -38,9 +40,16 @@ private:
     // resetting the visited vector
     void resetVisited() { visited = std::vector<bool>(numNodes, false); }
 
+    // function for counting the number of in and out degrees and the number of edges
+    void countInOutDegrees(int in[], int out[], int &edges);
+
+    // function for finding the starting node of an Eulerian Path
+    int findStartNode();
+
 public:
     Graph(int numNodes = 0);
 
+    Graph(std::vector<std::vector<int>> &adj);
     Graph(std::vector<std::vector<std::pair<int, int>>> adj);
     Graph(int numNodes, std::vector<std::vector<int>> connections, bool isDirected = false);
 
@@ -60,8 +69,14 @@ public:
     // and the second vector contains the bridges
     std::pair<std::vector<bool>, std::vector<std::vector<int>>> dfsCriticalConnections(int node);
 
+    // DFS made for finding the Eulerian path in a graph
+    void dfsEuler(int startNode, int outTemp[], std::deque<int> &path);
+
     // Breadth first search returning a vector of nodes in order
     std::vector<int> bfs(int startNode);
+
+    // Breadth first search that allows repetition of nodes and avoids indefinite loops by checking if the state was already visited
+    int bfsBitManipulation();
 
     // Dijkstra's algorithm returning the shortest distance between two nodes (or two sets of nodes)
     int dijkstra(std::vector<int> startNodes, std::vector<int> endNodes);
@@ -79,6 +94,10 @@ public:
     std::vector<edge> kruskalMST();
 
     std::vector<edge> primMST();
+
+    bool isEulerian();
+
+    std::deque<int> findEulerianPath();
 };
 
 #endif // GRAF_H
